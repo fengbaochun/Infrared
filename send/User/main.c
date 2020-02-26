@@ -46,11 +46,11 @@ int main(void)
 
 	while(1)                            
 	{
-//		NEC_IE_code_message(user_code_16bit,data_code_8bit++);	// 上电发送：用户码0x1234 + 数据码0x66
-//		if(data_code_8bit>0xfe)
-//		{
-//			data_code_8bit=0x00;
-//		}
+		NEC_IE_code_message(user_code_16bit,data_code_8bit++);	// 上电发送：用户码0x1234 + 数据码0x66
+		if(data_code_8bit>0xfe)
+		{
+			data_code_8bit=0x00;
+		}
 //		delay_ms(1000);
 		delay_ms(1000);
 		a++;
