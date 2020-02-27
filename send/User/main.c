@@ -29,6 +29,13 @@ static void SystemClock_Config(void);
 uint16_t	user_code_16bit = 0x1234;	// 初始化16位用户码
 
 uint8_t data_code_8bit = 0x00 ;		// 初始化8位数据码
+
+void delay_us_(int num)
+{
+	int a=0;
+	a++;
+	a--;
+}
 int a=0;
 /**
   * @brief  主函数
@@ -39,7 +46,7 @@ int main(void)
 {
 
 	SystemClock_Config();
-	delay_init(42);
+	delay_init(168);
 	Infrared_IE_Init_JX();
 	DEBUG_USART_Config();
 	
@@ -51,9 +58,7 @@ int main(void)
 		{
 			data_code_8bit=0x00;
 		}
-//		delay_ms(1000);
 		delay_ms(1000);
-		a++;
 	}
 }
 /**
@@ -94,7 +99,7 @@ static void SystemClock_Config(void)
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 25;
+  RCC_OscInitStruct.PLL.PLLM = 8;
   RCC_OscInitStruct.PLL.PLLN = 336;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 7;

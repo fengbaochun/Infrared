@@ -24,6 +24,7 @@
 
 #define INF_REV(x)	HAL_GPIO_WritePin(LED1_GPIO_PORT,LED1_PIN,x)
 
+#define GPIO_T(p,i)					{p->ODR ^=i;}	
 
 
 
