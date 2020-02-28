@@ -47,18 +47,53 @@ int main(void)
 
 	SystemClock_Config();
 	delay_init(168);
-	Infrared_IE_Init_JX();
-	DEBUG_USART_Config();
+	TIM_Init();
+	Infrared_IR_Init_JX();
+//	DEBUG_USART_Config();
 	
 
 	while(1)                            
 	{
-		NEC_IE_code_message(user_code_16bit,data_code_8bit++);	// 上电发送：用户码0x1234 + 数据码0x66
-		if(data_code_8bit>0xfe)
+				// 判断是否接收到有效的NEC红外信息
+		//------------------------------------------------------------------------
+		if(Current_bit_CNT>=34)
 		{
-			data_code_8bit=0x00;
+			// 解码NEC格式红外信息
+			//------------------------------
+			if( ! NEC_IR_decode_message() )
+			{
+				// 判断数据码和数据码反码是否相反
+				//-----------------------------
+				if( Receive_data_code_8bit == (uint8_t)(~Receive_data_code_opposite) )
+				{
+					// 避免重复保存
+					//-------------
+//					if( user_code_16bit!=Receive_user_code_16bit || data_code_8bit!=Receive_data_code_8bit )
+					{
+						user_code_16bit = Receive_user_code_16bit;	// 保存用户码
+					
+						data_code_8bit  = Receive_data_code_8bit ;	// 保存数据码
+						
+//						//将接收到的：用户码高字节 / 用户码低字节 / 数据码，通过串口发送
+//						//------------------------------------------------------------
+//						USART_SendData( USART1, user_code_16bit>>8 );
+//						while ( USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET );
+//						USART_SendData( USART1, user_code_16bit );
+//						while ( USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET );
+//						USART_SendData( USART1, data_code_8bit );
+//						while ( USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET );
+//						//------------------------------------------------------------
+						
+						delay_ms(200);
+						
+//						PB_out(5) = 0;	// LED0亮一下，表示将红外码接收
+//						delay_ms(200);
+//						PB_out(5) = 1;
+					}
+				}
+			}
 		}
-		delay_ms(1000);
+
 	}
 }
 /**

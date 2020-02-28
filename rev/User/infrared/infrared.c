@@ -13,7 +13,7 @@ uint8_t  Receive_data_code_8bit = 0 ;	// 记录8位数据码
 uint8_t  Receive_data_code_opposite = 0;	// 记录8位数据码的反码
 //--------------------------------------------------------
 
-
+TIM_HandleTypeDef TIM_TimeBaseStructure;
 
 // 以下为红外发射的相关函数
 //########################################################################################################
@@ -21,252 +21,271 @@ uint8_t  Receive_data_code_opposite = 0;	// 记录8位数据码的反码
 
 #define		delay8_77us()	delay_us(8)
 #define		delay17_53us()	delay_us(17)
-//---------------------------------------
 
- /**
-  * @brief  配置 PA0 为线中断口，并设置中断优先级
-  * @param  无
-  * @retval 无
-  */
-void EXTI_Key_Config(void)
+// 以下为红外发射的相关函数
+//########################################################################################################
+
+#define		delay8_77us()	delay_us(8)
+#define		delay17_53us()	delay_us(17)
+
+
+void Infrared_IR_Init_JX(void) 
 {
-    GPIO_InitTypeDef GPIO_InitStructure; 
+//	GPIO_InitTypeDef GPIO_InitStruct; 
+//	EXTI_InitTypeDef EXTI_InitStruct;
+//	NVIC_InitTypeDef NVIC_InitStruct;
+//	
+//	/* 配置PC0引脚 */
+//	//---------------------------------------------------------------------------
+//	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);		// 使能PC端口时钟											
+//	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IPU;	                // 上拉输入模式
+//	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_0;						// PC0
+//	GPIO_Init(GPIOC, &GPIO_InitStruct);	
+//	//---------------------------------------------------------------------------
+//	
+//	/* 配置PC0引脚中断模式 */
+//	//----------------------------------------------------------------------------------
+//	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO,ENABLE);			// 使能映射时钟
+//    
+//	GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource0); // 将中断线0映射到PC0线上
+//    
+//	EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;			// 选择为中断
+//	EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Falling; 		// 下降沿中断
+//	EXTI_InitStruct.EXTI_LineCmd = ENABLE;
+//	EXTI_InitStruct.EXTI_Line = EXTI_Line0;						// 选择外部中断线0
+//	EXTI_Init(&EXTI_InitStruct);								
+//	
+//	 /* 配置NVIC */
+//	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 1;		// 抢占优先级
+//	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 2;				// 响应优先级
+//	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;	
+//	NVIC_InitStruct.NVIC_IRQChannel = EXTI0_IRQn; 				// 中断通道：外部中断线0
+//	NVIC_Init(&NVIC_InitStruct);
 
 
-    SEND_GPIO_CLK_ENABLE();
-    KEY2_INT_GPIO_CLK_ENABLE();
+	GPIO_InitTypeDef GPIO_InitStructure; 
 
-	/*发送*/
-    GPIO_InitStructure.Pin = SEND_GPIO_PIN;
+    /*开启按键GPIO口的时钟*/
+    REV_GPIO_CLK_ENABLE();
 
-    GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;	    		
-
+    /* 选择按键1的引脚 */ 
+    GPIO_InitStructure.Pin = REV_GPIO_PIN;
+    /* 设置引脚为输入模式 */ 
+    GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING_FALLING;//GPIO_MODE_IT_RISING;	    		  GPIO_MODE_IT_RISING_FALLING
+    /* 设置引脚不上拉也不下拉 */
     GPIO_InitStructure.Pull = GPIO_NOPULL;
+    /* 使用上面的结构体初始化按键 */
+    HAL_GPIO_Init(REV_GPIO_PORT, &GPIO_InitStructure); 
+    /* 配置 EXTI 中断源 到key1 引脚、配置中断优先级*/
+    HAL_NVIC_SetPriority(REV_EXTI_IRQ, 0, 0);
+    /* 使能中断 */
+    HAL_NVIC_EnableIRQ(REV_EXTI_IRQ);
 
-    HAL_GPIO_Init(SEND_GPIO_PORT, &GPIO_InitStructure); 
+//GPIO_InitTypeDef GPIO_InitStructure; 
+//REV_GPIO_CLK_ENABLE();
+//GPIO_InitStructure.Pin = REV_GPIO_PIN;	
+//GPIO_InitStructure.Mode  = GPIO_MODE_OUTPUT_PP;  
+//GPIO_InitStructure.Pull  = GPIO_PULLUP;
+//GPIO_InitStructure.Speed = GPIO_SPEED_HIGH; 
+//HAL_GPIO_Init(REV_GPIO_PORT, &GPIO_InitStructure);	
 
 }
-void SEND_IRQHandler(void)
+
+/*
+
+*/
+void TIM_Init(void)
+{
+
+	GENERAL_TIM_CLK_ENABLE();
+
+	TIM_TimeBaseStructure.Instance = GENERAL_TIM;
+	TIM_TimeBaseStructure.Init.Period = 20000-1;	
+	TIM_TimeBaseStructure.Init.Prescaler = 84-1;
+	TIM_TimeBaseStructure.Init.CounterMode=TIM_COUNTERMODE_UP;
+	TIM_TimeBaseStructure.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;
+	HAL_TIM_Base_Init(&TIM_TimeBaseStructure);
+
+	HAL_TIM_Base_Start_IT(&TIM_TimeBaseStructure);	
+    HAL_NVIC_SetPriority(GENERAL_TIM_IRQ, 0, 0);
+    HAL_NVIC_EnableIRQ(GENERAL_TIM_IRQ);
+}
+
+/**
+  * @brief  定时器中断函数
+	*	@note 		无
+  * @retval 无
+  */
+void  GENERAL_TIM_INT_IRQHandler (void)
+{
+	HAL_TIM_IRQHandler(&TIM_TimeBaseStructure);	 	
+}
+/**
+  * @brief  回调函数
+	*	@note 		无
+  * @retval 无
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	uint16_t TIM2_IT_Update_Cnt = 0 ;		// TIM2的溢出次数，用于LED1的闪烁计时
+    if(htim==(&TIM_TimeBaseStructure))
+    {
+		// 当接收到一个下降沿后，下一个下降沿须在20ms内被接收到，否则此次红外接收认为是出错的
+		//-----------------------------------------------------------------------------
+		Current_bit_CNT = 0;	// 将当前红外接收的位数清0
+		
+		
+		
+		TIM2_IT_Update_Cnt ++ ;
+		
+		if( TIM2_IT_Update_Cnt >= 25 )		// 蓝灯闪烁速率：1s
+		{
+			TIM2_IT_Update_Cnt = 0 ;
+			
+//			PD_out(12) = !PD_out(12);		// 蓝灯闪烁
+		}
+    }
+}
+
+
+
+
+
+// 解码NEC编码格式的信息
+// 注：协议码的时长根据需要，可自行限定判断区间
+// 注：TIM2的计数周期为1us，溢出值为20000
+//------------------------------------------------------------------------------------------
+uint8_t NEC_IR_decode_message(void)
+{
+	uint8_t NEC_decode_cnt;
+	
+	// 协议引导码的标准长度为13.5ms
+	// 判断引导码的长度是否在(12ms,15ms)区间内
+	//-----------------------------------------------------------
+	if( Each_bit_duration[1]<12000 || Each_bit_duration[1]>15000 )
+	{ return F_decode_error; }	// 不在规定的区间内，返回解码出错
+	
+	
+	// 解码16位用户码
+	//---------------------------------------------------------
+	for(NEC_decode_cnt=2; NEC_decode_cnt<18; NEC_decode_cnt++)
+	{
+		// 协议数据"1"的标准长度为2.24ms
+		// 协议数据位的长度在(2ms,2.5ms)区间内 => 协议数据"1"
+		//-------------------------------------------------------------------------------------
+		if( Each_bit_duration[NEC_decode_cnt]>2000 && Each_bit_duration[NEC_decode_cnt]<2500 )
+		{ 
+			Receive_user_code_16bit >>= 1;
+			
+			Receive_user_code_16bit |= 0x8000;
+		}
+		
+		// 协议数据"0"的标准长度为1.12ms
+		// 协议数据位的长度在(1ms,1.25ms)区间内 => 协议数据"0"
+		//------------------------------------------------------------------------------------------
+		else if( Each_bit_duration[NEC_decode_cnt]>1000 && Each_bit_duration[NEC_decode_cnt]<1250 )
+		{
+			Receive_user_code_16bit >>= 1;
+			
+			Receive_user_code_16bit &= ~0x8000;
+		}
+		
+		// 协议数据位不在限定范围内，出错
+		//-----------------------------
+		else { return F_decode_error; }
+	}
+	
+	// 解码8位数据码
+	//---------------------------------------------------------
+	for(NEC_decode_cnt=18; NEC_decode_cnt<26; NEC_decode_cnt++)
+	{
+		// 协议数据"1"的标准长度为2.24ms
+		// 协议数据位的长度在(2ms,2.5ms)区间内 => 协议数据"1"
+		//-------------------------------------------------------------------------------------
+		if( Each_bit_duration[NEC_decode_cnt]>2000 && Each_bit_duration[NEC_decode_cnt]<2500 )
+		{ 
+			Receive_data_code_8bit >>= 1;
+			
+			Receive_data_code_8bit |= 0x80;
+		}
+		
+		// 协议数据"0"的标准长度为1.12ms
+		// 协议数据位的长度在(1ms,1.25ms)区间内 => 协议数据"0"
+		//------------------------------------------------------------------------------------------
+		else if( Each_bit_duration[NEC_decode_cnt]>1000 && Each_bit_duration[NEC_decode_cnt]<1250 )
+		{
+			Receive_data_code_8bit >>= 1;
+			
+			Receive_data_code_8bit &= ~0x80;
+		}
+		
+		// 协议数据位不在限定范围内，出错
+		//-----------------------------
+		else { return F_decode_error; }
+	}
+	
+	// 解码8位数据码的反码
+	//---------------------------------------------------------
+	for(NEC_decode_cnt=26; NEC_decode_cnt<34; NEC_decode_cnt++)
+	{
+		// 协议数据"1"的标准长度为2.24ms
+		// 协议数据位的长度在(2ms,2.5ms)区间内 => 协议数据"1"
+		//-------------------------------------------------------------------------------------
+		if( Each_bit_duration[NEC_decode_cnt]>2000 && Each_bit_duration[NEC_decode_cnt]<2500 )
+		{ 
+			Receive_data_code_opposite >>= 1;
+			
+			Receive_data_code_opposite |= 0x80;
+		}
+		
+		// 协议数据"0"的标准长度为1.12ms
+		// 协议数据位的长度在(1ms,1.25ms)区间内 => 协议数据"0"
+		//------------------------------------------------------------------------------------------
+		else if( Each_bit_duration[NEC_decode_cnt]>1000 && Each_bit_duration[NEC_decode_cnt]<1250 )
+		{
+			Receive_data_code_opposite >>= 1;
+			
+			Receive_data_code_opposite &= ~0x80;
+		}
+		
+		// 协议数据位不在限定范围内，出错
+		//-----------------------------
+		else { return F_decode_error; }
+	}
+	
+	return F_decode_success;	// 解码成功	
+}
+
+void REV_IRQHandler(void)
 {
   //确保是否产生了EXTI Line中断
 	if(__HAL_GPIO_EXTI_GET_IT(SEND_GPIO_PIN) != RESET) 
 	{
-
-    //清除中断标志位
+		//清除中断标志位
 		__HAL_GPIO_EXTI_CLEAR_IT(SEND_GPIO_PIN);     
+
+		Each_bit_duration[Current_bit_CNT] = TIM2->CNT;	// 将此下降沿的TIM2计数存入Each_bit_duration[x]中
+
+		Current_bit_CNT ++ ;	// 将当前红外接收的位数+1
+
+		// 1、方便下一个下降沿的计时
+		// 2、等待下一个下降沿20ms
+		//---------------------------------------------------------------------
+		TIM2->CNT=0;			// 红外接收管脚接收到一个下降沿后，将TIM2计数器清0
 	}  
 }
 
-void KEY2_IRQHandler(void)
-{
-  //确保是否产生了EXTI Line中断
-	if(__HAL_GPIO_EXTI_GET_IT(KEY2_INT_GPIO_PIN) != RESET) 
-	{
-
-    //清除中断标志位
-		__HAL_GPIO_EXTI_CLEAR_IT(KEY2_INT_GPIO_PIN);     
-	}  
-}
 
 
 
 
-// 初始化红外发射管脚：Infrared_IE = PC1
-//----------------------------------------------------------------------------------------------
-void Infrared_IE_Init_JX(void)
-{
-//	GPIO_InitTypeDef GPIO_InitStruct;                       // 定义一个GPIO_InitTypeDef类型的变量
-//	
-//	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);   // 允许GPIOC时钟
-//	
-//	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_1;                  // GPIO_Pin_1
-//	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;           // 通用推挽输出
-//	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;          // 50MHz速度
-//	GPIO_Init(GPIOC, &GPIO_InitStruct);
-//	
-//	GPIO_ResetBits(GPIOC, GPIO_Pin_1);                      //PC1拉低
-	
-	GPIO_InitTypeDef GPIO_InitStructure; 
-
-	SEND_GPIO_CLK_ENABLE();
-
-	/*发送*/
-	GPIO_InitStructure.Pin = SEND_GPIO_PIN;
-	GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;	    		
-	GPIO_InitStructure.Pull = GPIO_NOPULL;
-	GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
-
-	HAL_GPIO_Init(SEND_GPIO_PORT, &GPIO_InitStructure); 
-	
-	INF_SEND(0);
-	
-}
-//----------------------------------------------------------------------------------------------
-
-
-//*********************************** 载波调制 *********************************************
-//
-//	26.3us（一个周期）= 8.77us（IE为高，发射红外光）+ 17.53us（IE为低，不发射红外光）
-//	注：一个载波周期中，发射红外光8.77us  + 不发射红外光17.53us，这个周期就是载波发射周期。
-//	注：载波发射周期中，发射红外光的占空比一般为1/3。
-
-//	26.3us（一个周期）= 26.3us（IE为低，不发射红外光）
-//	注：整个周期内，都不发射红外光，这个周期为载波不发射周期。
-
-//******************************************************************************************
-
-
-// NEC协议数据"0"= 载波发射0.56ms + 载波不发射0.56ms
-//-------------------------------------------------
-void NEC_IE_Send_zero(void)     
-{
-	uint8_t i;
-	
-	// 载波发射0.56ms ≈ 26.3us * 21
-	//-------------------------------
-	for(i=0;i<22;i++)
-	{
-        //26.3us（载波发射周期）
-		//------------------------------------
-		INF_SEND(1);	// IE抬高，发射红外光
-		delay8_77us();  // 延时8.77us                        
-											
-		INF_SEND(0);	// IE拉低，不发射红外光
-		delay17_53us(); // 延时17.53us
-		//------------------------------------
-	}
-
-	
-	// 载波不发射0.56ms ≈ 26.3us * 21
-	//-------------------------------
-	for(i=0;i<21;i++)
-	{
-        //26.3us（载波不发射周期）
-		//------------------------------------
-		INF_SEND(0);	// IE拉低，不发射红外光
-		delay8_77us();  // 延时8.77us
-                                            
-		INF_SEND(0);	// IE拉低，不发射红外光
-		delay17_53us(); // 延时17.53us
-		//------------------------------------
-	}
-}
-//-------------------------------------------------
-
-
-// NEC协议数据"1" = 载波发射0.56ms + 载波不发射1.68ms
-//-------------------------------------------------
-void NEC_IE_Send_one(void)
-{
-	uint8_t i;
-	
-	// 载波发射0.56ms ≈ 26.3us * 21
-	//-------------------------------
-	for(i=0;i<22;i++)
-	{
-		//26.3us（载波发射周期）
-		//------------------------------------
-		INF_SEND(1);    // IE抬高，发射红外光
-		delay8_77us();	// 延时8.77us
-		
-		INF_SEND(0);  // IE拉低，不发射红外光
-		delay17_53us();	// 延时17.53us
-		//------------------------------------
-	}
-	
-	// 载波不发射1.68ms ≈ 26.3us * 64
-	//--------------------------------
-	for(i=0;i<64;i++)
-	{
-		//26.3us（载波不发射周期）
-		//------------------------------------
-		INF_SEND(0);	// IE拉低，不发射红外光
-		delay8_77us();	// 延时8.77us
-		
-		INF_SEND(0);	// IE拉低，不发射红外光
-		delay17_53us();	// 延时17.53us
-		//------------------------------------
-	}
-}
-//-------------------------------------------------
-
-
-// 将一帧数据调制为NEC协议规定的红外载波发射出去
-// 一帧数据格式：低位在前，由低到高发送8位数据
-// 这帧数据可以是：②16位用户码低字节(8位) / ③16位用户码高字节(8位) / ④8位数据码 / ⑤8位数据码的反码
-//----------------------------------------------------------------------------------------------
-void NEC_IE_One_Data(uint8_t IE_One_Data)
-{
-	uint8_t i;
-	
-	for(i=0;i<8;i++)
-	{
-		if( IE_One_Data & 0x01 )
-			NEC_IE_Send_one();
-		else
-			NEC_IE_Send_zero();
-			
-		IE_One_Data>>=1;
-	}
-}
-//---------------------------------
 
 
 
-// 发送NEC编码格式的信息
-//----------------------------------------------------------------------------------------------------------------------
-// NEC 编码格式： ①引导码 + ②16位用户码低字节(8位) + ③16位用户码高字节(8位) + ④8位数据码 + ⑤8位数据码的反码 + ⑥结束码‘0’ 
-//----------------------------------------------------------------------------------------------------------------------
-void NEC_IE_code_message(uint16_t user_code_16bit, uint8_t data_code_8bit)
-{
-	uint16_t i;
-	
-	uint8_t T_user_code_high = user_code_16bit>>8;
-	
-	uint8_t T_user_code_low = user_code_16bit;
 
-	// ①引导码：载波发射9ms，不发射4.5ms
-	//------------------------------------------------------------
-	// 载波发射 9ms ≈ 26.3us * 342
-	for(i=0;i<342;i++) 
-	{
-		INF_SEND(1);	// IE抬高，发射红外光
-		delay8_77us();	// 延时8.77us
-		
-		INF_SEND(0);	// IE拉低，不发射红外光
-		delay17_53us();	// 延时17.53us
-	}
-	
-	// 载波不发射 4.5ms ≈ 26.3us * 171
-	for(i=0;i<171;i++)
-	{
-		INF_SEND(0);	// IE拉低，不发射红外光
-		delay8_77us();	// 延时8.77us
-		
-		INF_SEND(0);	// IE拉低，不发射红外光
-		delay17_53us();	// 延时17.53us
-	}
-	//------------------------------------------------------------
-	
-	
-	//------------------------------------------------------------
-	// ②16位用户码低字节	：8位数据
-	NEC_IE_One_Data(T_user_code_low);
-	
-	// ③16位用户码高字节：8位数据
-	NEC_IE_One_Data(T_user_code_high);
-	
-	// ④8位数据码 ：8位数据
-	NEC_IE_One_Data(data_code_8bit);
-	
-	// ⑤8位数据码的反码：8位数据
-	NEC_IE_One_Data(~data_code_8bit);
-	
-	//------------------------------------------------------------
-	
-	
-	// ⑥结束码‘0’
-	//--------------
-	NEC_IE_Send_zero();
-	//--------------
-}
+
+
+
+
+
+
