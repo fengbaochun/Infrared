@@ -73,19 +73,13 @@ void Infrared_IR_Init_JX(void)
     /* 设置引脚为输入模式 */ 
     GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;//GPIO_MODE_IT_RISING_FALLING;//GPIO_MODE_IT_RISING;	    		  GPIO_MODE_IT_RISING_FALLING
     /* 设置引脚不上拉也不下拉 */
-    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Pull = GPIO_PULLDOWN;//GPIO_NOPULL;
     /* 使用上面的结构体初始化按键 */
     HAL_GPIO_Init(REV_GPIO_PORT, &GPIO_InitStructure); 
     /* 配置 EXTI 中断源 到key1 引脚、配置中断优先级*/
     HAL_NVIC_SetPriority(REV_EXTI_IRQ, 0, 0);
     /* 使能中断 */
-    HAL_NVIC_EnableIRQ(REV_EXTI_IRQ);
-	
-	
-//	GPIO_MODE_IT_RISING           
-//	GPIO_MODE_IT_FALLING          
-//	GPIO_MODE_IT_RISING_FALLING   
-	
+    HAL_NVIC_EnableIRQ(REV_EXTI_IRQ);	
 
 }
 
@@ -138,10 +132,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		{
 			TIM2_IT_Update_Cnt = 0 ;
 			
-//			PD_out(12) = !PD_out(12);		// 蓝灯闪烁
 		}
 		
-//		GPIO_T(REV_GPIO_PORT,REV_GPIO_PIN);
 		
     }
 }
@@ -162,7 +154,7 @@ uint8_t NEC_IR_decode_message(void)
 	// 判断引导码的长度是否在(12ms,15ms)区间内
 	//-----------------------------------------------------------
 	if( Each_bit_duration[1]<12000 || Each_bit_duration[1]>15000 )
-	{ return F_decode_error; }	// 不在规定的区间内，返回解码出错
+	{ Current_bit_CNT=0;return F_decode_error; }	// 不在规定的区间内，返回解码出错
 	
 	
 	// 解码16位用户码

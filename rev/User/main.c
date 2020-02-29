@@ -68,32 +68,13 @@ int main(void)
 						user_code_16bit = Receive_user_code_16bit;	// 保存用户码
 					
 						data_code_8bit  = Receive_data_code_8bit ;	// 保存数据码
-						
-	//						//将接收到的：用户码高字节 / 用户码低字节 / 数据码，通过串口发送
-	//						//------------------------------------------------------------
-	//						USART_SendData( USART1, user_code_16bit>>8 );
-	//						while ( USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET );
-	//						USART_SendData( USART1, user_code_16bit );
-	//						while ( USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET );
-	//						USART_SendData( USART1, data_code_8bit );
-	//						while ( USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET );
-	//						//------------------------------------------------------------
-						
+												
 						delay_ms(200);
 						
-	//						PB_out(5) = 0;	// LED0亮一下，表示将红外码接收
-	//						delay_ms(200);
-	//						PB_out(5) = 1;
 					}
 				}
 			}
 		}
-////		delay_us(10);
-////		
-////		GPIO_T(REV_GPIO_PORT,REV_GPIO_PIN);
-
-//		
-
 	}
 }
 /**
