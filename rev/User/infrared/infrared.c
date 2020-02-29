@@ -71,7 +71,7 @@ void Infrared_IR_Init_JX(void)
     /* 选择按键1的引脚 */ 
     GPIO_InitStructure.Pin = REV_GPIO_PIN;
     /* 设置引脚为输入模式 */ 
-    GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING_FALLING;//GPIO_MODE_IT_RISING;	    		  GPIO_MODE_IT_RISING_FALLING
+    GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;//GPIO_MODE_IT_RISING_FALLING;//GPIO_MODE_IT_RISING;	    		  GPIO_MODE_IT_RISING_FALLING
     /* 设置引脚不上拉也不下拉 */
     GPIO_InitStructure.Pull = GPIO_NOPULL;
     /* 使用上面的结构体初始化按键 */
@@ -80,14 +80,12 @@ void Infrared_IR_Init_JX(void)
     HAL_NVIC_SetPriority(REV_EXTI_IRQ, 0, 0);
     /* 使能中断 */
     HAL_NVIC_EnableIRQ(REV_EXTI_IRQ);
-
-//GPIO_InitTypeDef GPIO_InitStructure; 
-//REV_GPIO_CLK_ENABLE();
-//GPIO_InitStructure.Pin = REV_GPIO_PIN;	
-//GPIO_InitStructure.Mode  = GPIO_MODE_OUTPUT_PP;  
-//GPIO_InitStructure.Pull  = GPIO_PULLUP;
-//GPIO_InitStructure.Speed = GPIO_SPEED_HIGH; 
-//HAL_GPIO_Init(REV_GPIO_PORT, &GPIO_InitStructure);	
+	
+	
+//	GPIO_MODE_IT_RISING           
+//	GPIO_MODE_IT_FALLING          
+//	GPIO_MODE_IT_RISING_FALLING   
+	
 
 }
 
@@ -134,8 +132,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		//-----------------------------------------------------------------------------
 		Current_bit_CNT = 0;	// 将当前红外接收的位数清0
 		
-		
-		
 		TIM2_IT_Update_Cnt ++ ;
 		
 		if( TIM2_IT_Update_Cnt >= 25 )		// 蓝灯闪烁速率：1s
@@ -144,6 +140,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			
 //			PD_out(12) = !PD_out(12);		// 蓝灯闪烁
 		}
+		
+//		GPIO_T(REV_GPIO_PORT,REV_GPIO_PIN);
+		
     }
 }
 
@@ -259,10 +258,10 @@ uint8_t NEC_IR_decode_message(void)
 void REV_IRQHandler(void)
 {
   //确保是否产生了EXTI Line中断
-	if(__HAL_GPIO_EXTI_GET_IT(SEND_GPIO_PIN) != RESET) 
+	if(__HAL_GPIO_EXTI_GET_IT(REV_GPIO_PIN) != RESET) 
 	{
 		//清除中断标志位
-		__HAL_GPIO_EXTI_CLEAR_IT(SEND_GPIO_PIN);     
+		__HAL_GPIO_EXTI_CLEAR_IT(REV_GPIO_PIN);     
 
 		Each_bit_duration[Current_bit_CNT] = TIM2->CNT;	// 将此下降沿的TIM2计数存入Each_bit_duration[x]中
 

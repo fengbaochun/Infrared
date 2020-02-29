@@ -30,12 +30,7 @@ uint16_t	user_code_16bit = 0x1234;	// 初始化16位用户码
 
 uint8_t data_code_8bit = 0x00 ;		// 初始化8位数据码
 
-void delay_us_(int num)
-{
-	int a=0;
-	a++;
-	a--;
-}
+
 int a=0;
 /**
   * @brief  主函数
@@ -68,31 +63,36 @@ int main(void)
 				{
 					// 避免重复保存
 					//-------------
-//					if( user_code_16bit!=Receive_user_code_16bit || data_code_8bit!=Receive_data_code_8bit )
+	//					if( user_code_16bit!=Receive_user_code_16bit || data_code_8bit!=Receive_data_code_8bit )
 					{
 						user_code_16bit = Receive_user_code_16bit;	// 保存用户码
 					
 						data_code_8bit  = Receive_data_code_8bit ;	// 保存数据码
 						
-//						//将接收到的：用户码高字节 / 用户码低字节 / 数据码，通过串口发送
-//						//------------------------------------------------------------
-//						USART_SendData( USART1, user_code_16bit>>8 );
-//						while ( USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET );
-//						USART_SendData( USART1, user_code_16bit );
-//						while ( USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET );
-//						USART_SendData( USART1, data_code_8bit );
-//						while ( USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET );
-//						//------------------------------------------------------------
+	//						//将接收到的：用户码高字节 / 用户码低字节 / 数据码，通过串口发送
+	//						//------------------------------------------------------------
+	//						USART_SendData( USART1, user_code_16bit>>8 );
+	//						while ( USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET );
+	//						USART_SendData( USART1, user_code_16bit );
+	//						while ( USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET );
+	//						USART_SendData( USART1, data_code_8bit );
+	//						while ( USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET );
+	//						//------------------------------------------------------------
 						
 						delay_ms(200);
 						
-//						PB_out(5) = 0;	// LED0亮一下，表示将红外码接收
-//						delay_ms(200);
-//						PB_out(5) = 1;
+	//						PB_out(5) = 0;	// LED0亮一下，表示将红外码接收
+	//						delay_ms(200);
+	//						PB_out(5) = 1;
 					}
 				}
 			}
 		}
+////		delay_us(10);
+////		
+////		GPIO_T(REV_GPIO_PORT,REV_GPIO_PIN);
+
+//		
 
 	}
 }
@@ -134,7 +134,7 @@ static void SystemClock_Config(void)
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLM = 25;
   RCC_OscInitStruct.PLL.PLLN = 336;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 7;
