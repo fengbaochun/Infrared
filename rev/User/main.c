@@ -44,12 +44,11 @@ int main(void)
 	delay_init(168);
 	TIM_Init();
 	Infrared_IR_Init_JX();
-//	DEBUG_USART_Config();
-	
+	DEBUG_USART_Config();
 
 	while(1)                            
 	{
-				// 判断是否接收到有效的NEC红外信息
+		// 判断是否接收到有效的NEC红外信息
 		//------------------------------------------------------------------------
 		if(Current_bit_CNT>=34)
 		{
@@ -63,31 +62,20 @@ int main(void)
 				{
 					// 避免重复保存
 					//-------------
-	//					if( user_code_16bit!=Receive_user_code_16bit || data_code_8bit!=Receive_data_code_8bit )
+					//if( user_code_16bit!=Receive_user_code_16bit || data_code_8bit!=Receive_data_code_8bit )
 					{
 						user_code_16bit = Receive_user_code_16bit;	// 保存用户码
 					
 						data_code_8bit  = Receive_data_code_8bit ;	// 保存数据码
 						
-	//						//将接收到的：用户码高字节 / 用户码低字节 / 数据码，通过串口发送
-	//						//------------------------------------------------------------
-	//						USART_SendData( USART1, user_code_16bit>>8 );
-	//						while ( USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET );
-	//						USART_SendData( USART1, user_code_16bit );
-	//						while ( USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET );
-	//						USART_SendData( USART1, data_code_8bit );
-	//						while ( USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET );
-	//						//------------------------------------------------------------
-						Current_bit_CNT=0;
-						delay_ms(200);
-						
+						printf("data= %o \r\n",data_code_8bit);
+
+						Current_bit_CNT=0;//接收到数据后，将参数置0，防止重复打印
+
 					}
 				}
 			}
 		}
-////		GPIO_T(REV_GPIO_PORT,REV_GPIO_PIN);
-
-//		
 
 	}
 }
