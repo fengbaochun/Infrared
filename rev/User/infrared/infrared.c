@@ -77,7 +77,7 @@ void Infrared_IR_Init_JX(void)
     /* 使用上面的结构体初始化按键 */
     HAL_GPIO_Init(REV_GPIO_PORT, &GPIO_InitStructure); 
     /* 配置 EXTI 中断源 到key1 引脚、配置中断优先级*/
-    HAL_NVIC_SetPriority(REV_EXTI_IRQ, 0, 0);
+    HAL_NVIC_SetPriority(REV_EXTI_IRQ, 1, 1);
     /* 使能中断 */
     HAL_NVIC_EnableIRQ(REV_EXTI_IRQ);
 	
@@ -109,47 +109,6 @@ void TIM_Init(void)
     HAL_NVIC_EnableIRQ(GENERAL_TIM_IRQ);
 }
 
-/**
-  * @brief  定时器中断函数
-	*	@note 		无
-  * @retval 无
-  */
-void  GENERAL_TIM_INT_IRQHandler (void)
-{
-	HAL_TIM_IRQHandler(&TIM_TimeBaseStructure);	 	
-}
-/**
-  * @brief  回调函数
-	*	@note 		无
-  * @retval 无
-  */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-	uint16_t TIM2_IT_Update_Cnt = 0 ;		// TIM2的溢出次数，用于LED1的闪烁计时
-    if(htim==(&TIM_TimeBaseStructure))
-    {
-		// 当接收到一个下降沿后，下一个下降沿须在20ms内被接收到，否则此次红外接收认为是出错的
-		//-----------------------------------------------------------------------------
-		Current_bit_CNT = 0;	// 将当前红外接收的位数清0
-		
-		TIM2_IT_Update_Cnt ++ ;
-		
-		if( TIM2_IT_Update_Cnt >= 25 )		// 蓝灯闪烁速率：1s
-		{
-			TIM2_IT_Update_Cnt = 0 ;
-			
-//			PD_out(12) = !PD_out(12);		// 蓝灯闪烁
-		}
-		
-//		GPIO_T(REV_GPIO_PORT,REV_GPIO_PIN);
-		
-    }
-}
-
-
-
-
-
 // 解码NEC编码格式的信息
 // 注：协议码的时长根据需要，可自行限定判断区间
 // 注：TIM2的计数周期为1us，溢出值为20000
@@ -162,7 +121,7 @@ uint8_t NEC_IR_decode_message(void)
 	// 判断引导码的长度是否在(12ms,15ms)区间内
 	//-----------------------------------------------------------
 	if( Each_bit_duration[1]<12000 || Each_bit_duration[1]>15000 )
-	{ return F_decode_error; }	// 不在规定的区间内，返回解码出错
+	{ Current_bit_CNT=0; return F_decode_error; }	// 不在规定的区间内，返回解码出错
 	
 	
 	// 解码16位用户码
@@ -274,6 +233,42 @@ void REV_IRQHandler(void)
 	}  
 }
 
+/**
+  * @brief  定时器中断函数
+	*	@note 		无
+  * @retval 无
+  */
+void  GENERAL_TIM_INT_IRQHandler (void)
+{
+	HAL_TIM_IRQHandler(&TIM_TimeBaseStructure);	 	
+}
+/**
+  * @brief  回调函数
+	*	@note 		无
+  * @retval 无
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	uint16_t TIM2_IT_Update_Cnt = 0 ;		// TIM2的溢出次数，用于LED1的闪烁计时
+    if(htim==(&TIM_TimeBaseStructure))
+    {
+		// 当接收到一个下降沿后，下一个下降沿须在20ms内被接收到，否则此次红外接收认为是出错的
+		//-----------------------------------------------------------------------------
+		Current_bit_CNT = 0;	// 将当前红外接收的位数清0
+		
+		TIM2_IT_Update_Cnt ++ ;
+		
+		if( TIM2_IT_Update_Cnt >= 25 )		// 蓝灯闪烁速率：1s
+		{
+			TIM2_IT_Update_Cnt = 0 ;
+			
+//			PD_out(12) = !PD_out(12);		// 蓝灯闪烁
+		}
+		
+//		GPIO_T(REV_GPIO_PORT,REV_GPIO_PIN);
+		
+    }
+}
 
 
 

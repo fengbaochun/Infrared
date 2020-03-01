@@ -78,7 +78,7 @@ int main(void)
 	//						USART_SendData( USART1, data_code_8bit );
 	//						while ( USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET );
 	//						//------------------------------------------------------------
-						
+						Current_bit_CNT=0;
 						delay_ms(200);
 						
 	//						PB_out(5) = 0;	// LED0亮一下，表示将红外码接收
