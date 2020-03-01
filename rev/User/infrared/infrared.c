@@ -31,37 +31,6 @@ TIM_HandleTypeDef TIM_TimeBaseStructure;
 
 void Infrared_IR_Init_JX(void) 
 {
-//	GPIO_InitTypeDef GPIO_InitStruct; 
-//	EXTI_InitTypeDef EXTI_InitStruct;
-//	NVIC_InitTypeDef NVIC_InitStruct;
-//	
-//	/* 配置PC0引脚 */
-//	//---------------------------------------------------------------------------
-//	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);		// 使能PC端口时钟											
-//	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IPU;	                // 上拉输入模式
-//	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_0;						// PC0
-//	GPIO_Init(GPIOC, &GPIO_InitStruct);	
-//	//---------------------------------------------------------------------------
-//	
-//	/* 配置PC0引脚中断模式 */
-//	//----------------------------------------------------------------------------------
-//	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO,ENABLE);			// 使能映射时钟
-//    
-//	GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource0); // 将中断线0映射到PC0线上
-//    
-//	EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;			// 选择为中断
-//	EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Falling; 		// 下降沿中断
-//	EXTI_InitStruct.EXTI_LineCmd = ENABLE;
-//	EXTI_InitStruct.EXTI_Line = EXTI_Line0;						// 选择外部中断线0
-//	EXTI_Init(&EXTI_InitStruct);								
-//	
-//	 /* 配置NVIC */
-//	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 1;		// 抢占优先级
-//	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 2;				// 响应优先级
-//	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;	
-//	NVIC_InitStruct.NVIC_IRQChannel = EXTI0_IRQn; 				// 中断通道：外部中断线0
-//	NVIC_Init(&NVIC_InitStruct);
-
 
 	GPIO_InitTypeDef GPIO_InitStructure; 
 
@@ -81,12 +50,6 @@ void Infrared_IR_Init_JX(void)
     /* 使能中断 */
     HAL_NVIC_EnableIRQ(REV_EXTI_IRQ);
 	
-	
-//	GPIO_MODE_IT_RISING           
-//	GPIO_MODE_IT_FALLING          
-//	GPIO_MODE_IT_RISING_FALLING   
-	
-
 }
 
 /*
@@ -222,14 +185,14 @@ void REV_IRQHandler(void)
 		//清除中断标志位
 		__HAL_GPIO_EXTI_CLEAR_IT(REV_GPIO_PIN);     
 
-		Each_bit_duration[Current_bit_CNT] = TIM2->CNT;	// 将此下降沿的TIM2计数存入Each_bit_duration[x]中
+		Each_bit_duration[Current_bit_CNT] = GENERAL_TIM->CNT;	// 将此下降沿的TIM2计数存入Each_bit_duration[x]中
 
 		Current_bit_CNT ++ ;	// 将当前红外接收的位数+1
 
 		// 1、方便下一个下降沿的计时
 		// 2、等待下一个下降沿20ms
 		//---------------------------------------------------------------------
-		TIM2->CNT=0;			// 红外接收管脚接收到一个下降沿后，将TIM2计数器清0
+		GENERAL_TIM->CNT=0;			// 红外接收管脚接收到一个下降沿后，将TIM2计数器清0
 	}  
 }
 
@@ -249,21 +212,11 @@ void  GENERAL_TIM_INT_IRQHandler (void)
   */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	uint16_t TIM2_IT_Update_Cnt = 0 ;		// TIM2的溢出次数，用于LED1的闪烁计时
     if(htim==(&TIM_TimeBaseStructure))
     {
 		// 当接收到一个下降沿后，下一个下降沿须在20ms内被接收到，否则此次红外接收认为是出错的
 		//-----------------------------------------------------------------------------
 		Current_bit_CNT = 0;	// 将当前红外接收的位数清0
-		
-		TIM2_IT_Update_Cnt ++ ;
-		
-		if( TIM2_IT_Update_Cnt >= 25 )		// 蓝灯闪烁速率：1s
-		{
-			TIM2_IT_Update_Cnt = 0 ;
-			
-//			PD_out(12) = !PD_out(12);		// 蓝灯闪烁
-		}
 		
 //		GPIO_T(REV_GPIO_PORT,REV_GPIO_PIN);
 		

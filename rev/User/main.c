@@ -81,15 +81,10 @@ int main(void)
 						Current_bit_CNT=0;
 						delay_ms(200);
 						
-	//						PB_out(5) = 0;	// LED0亮一下，表示将红外码接收
-	//						delay_ms(200);
-	//						PB_out(5) = 1;
 					}
 				}
 			}
 		}
-////		delay_us(10);
-////		
 ////		GPIO_T(REV_GPIO_PORT,REV_GPIO_PIN);
 
 //		
@@ -134,7 +129,7 @@ static void SystemClock_Config(void)
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 25;
+  RCC_OscInitStruct.PLL.PLLM = 8;
   RCC_OscInitStruct.PLL.PLLN = 336;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 7;
