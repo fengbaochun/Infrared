@@ -1,28 +1,10 @@
-/**
-  ******************************************************************************
-  * @file    main.c
-  * @author  fire
-  * @version V1.0
-  * @date    2017-xx-xx
-  * @brief   GPIO输出--使用固件库点亮LED灯
-  ******************************************************************************
-  * @attention
-  *
-  * 实验平台:野火  STM32 F407 开发板 
-  * 论坛    :http://www.firebbs.cn
-  * 淘宝    :http://firestm32.taobao.com
-  *
-  ******************************************************************************
-  */
-
-/* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx.h"
 #include "./led/bsp_led.h"
 #include "./key/bsp_exti.h"
 #include "./infrared/infrared.h"
 #include "./usart/bsp_debug_usart.h"
-
+#include "./delay/core_delay.h"  
 
 static void SystemClock_Config(void); 
 
@@ -50,7 +32,7 @@ int main(void)
 	Infrared_IE_Init_JX();
 	DEBUG_USART_Config();
 	
-
+	deal_cmd();
 	while(1)                            
 	{
 		NEC_IE_code_message(user_code_16bit,data_code_8bit++);	// 上电发送：用户码0x1234 + 数据码0x66
@@ -59,6 +41,7 @@ int main(void)
 			data_code_8bit=0x00;
 		}
 		delay_ms(1000);
+		printf("test\r\n");
 	}
 }
 /**

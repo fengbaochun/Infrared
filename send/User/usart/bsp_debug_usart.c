@@ -1,4 +1,6 @@
 #include "./usart/bsp_debug_usart.h"
+#include "string.h"
+#include "stdlib.h"
 
 UART_HandleTypeDef UartHandle;
 //extern uint8_t ucTemp;  
@@ -60,6 +62,81 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
  
   HAL_NVIC_SetPriority(DEBUG_USART_IRQ ,0,1);	//抢占优先级0，子优先级1
   HAL_NVIC_EnableIRQ(DEBUG_USART_IRQ );		    //使能USART1中断通道  
+}
+
+
+#define CMD_MAX_LEN 50
+#define USER_CODE_LEN 10
+#define DATA_CODE_LEN 10
+char usart_cmd[CMD_MAX_LEN];
+
+
+/*
+<0xff00,0X11>
+*/
+
+/*
+解析命令
+*/
+void deal_cmd()
+{
+	
+	char *test="22,11>";
+	char user_code[USER_CODE_LEN];
+	char data_code[DATA_CODE_LEN];
+	
+	__IO uint8_t u_code,d_code;
+	
+	memset(user_code,0,sizeof(char)*USER_CODE_LEN);
+	memset(data_code,0,sizeof(char)*DATA_CODE_LEN);
+	
+	memcpy(user_code,test,2*sizeof(char));
+	memcpy(data_code,test+3,2*sizeof(char));
+	
+	u_code=atoi(user_code);
+	d_code=atoi(data_code);
+	
+	printf("%s\r\n",test);
+	printf("%s\r\n",user_code);
+	memset(usart_cmd,0,CMD_MAX_LEN*sizeof(char));
+
+}
+
+void data_deal(char dat)
+{
+    static uint8_t data_flag,dat_index=0;
+	/*协议头尾*/
+	uint8_t head_ch='<';
+	uint8_t tail_ch='>';
+    if(data_flag==0&&dat==head_ch)
+    {
+        data_flag=1;
+    }
+    else if(data_flag==1)
+    {
+        usart_cmd[dat_index++]=dat;
+        if(dat==tail_ch)
+        {
+            deal_cmd();
+            data_flag=0;
+            dat_index=0;
+        }
+    }
+}
+
+
+
+void  DEBUG_USART_IRQHandler(void)
+{
+  uint8_t ch=0; 
+  
+	if(__HAL_UART_GET_FLAG( &UartHandle, UART_FLAG_RXNE ) != RESET)
+	{		
+		ch=( uint16_t)READ_REG(UartHandle.Instance->DR);
+		data_deal(ch);
+		
+		//WRITE_REG(UartHandle.Instance->DR,ch); 
+	}
 }
 
 

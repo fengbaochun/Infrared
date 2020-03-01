@@ -34,7 +34,6 @@ void EXTI_Key_Config(void)
 
 
     SEND_GPIO_CLK_ENABLE();
-    KEY2_INT_GPIO_CLK_ENABLE();
 
 	/*发送*/
     GPIO_InitStructure.Pin = SEND_GPIO_PIN;
@@ -46,28 +45,6 @@ void EXTI_Key_Config(void)
     HAL_GPIO_Init(SEND_GPIO_PORT, &GPIO_InitStructure); 
 
 }
-void SEND_IRQHandler(void)
-{
-  //确保是否产生了EXTI Line中断
-	if(__HAL_GPIO_EXTI_GET_IT(SEND_GPIO_PIN) != RESET) 
-	{
-
-    //清除中断标志位
-		__HAL_GPIO_EXTI_CLEAR_IT(SEND_GPIO_PIN);     
-	}  
-}
-
-void KEY2_IRQHandler(void)
-{
-  //确保是否产生了EXTI Line中断
-	if(__HAL_GPIO_EXTI_GET_IT(KEY2_INT_GPIO_PIN) != RESET) 
-	{
-
-    //清除中断标志位
-		__HAL_GPIO_EXTI_CLEAR_IT(KEY2_INT_GPIO_PIN);     
-	}  
-}
-
 
 
 
