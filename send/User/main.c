@@ -6,19 +6,20 @@
 #include "./usart/bsp_debug_usart.h"
 #include "./delay/core_delay.h"  
 
+#include <stdio.h>
+#include <stdlib.h>
+
 static void SystemClock_Config(void); 
 
 uint16_t	user_code_16bit = 0x1234;	// 初始化16位用户码
 
 uint8_t data_code_8bit = 0x00 ;		// 初始化8位数据码
 
-void delay_us_(int num)
-{
-	int a=0;
-	a++;
-	a--;
-}
-int a=0;
+extern int send_status;
+extern char usart_cmd[CMD_MAX_LEN];
+extern char user_code[USER_CODE_LEN];
+extern char data_code[DATA_CODE_LEN];
+extern int u_code,d_code;
 /**
   * @brief  主函数
   * @param  无
@@ -31,17 +32,16 @@ int main(void)
 	delay_init(168);
 	Infrared_IE_Init_JX();
 	DEBUG_USART_Config();
-	
-	deal_cmd();
+		
 	while(1)                            
 	{
-		NEC_IE_code_message(user_code_16bit,data_code_8bit++);	// 上电发送：用户码0x1234 + 数据码0x66
-		if(data_code_8bit>0xfe)
+		if(send_status)
 		{
-			data_code_8bit=0x00;
+			data_code_8bit=d_code;
+			NEC_IE_code_message(user_code_16bit,data_code_8bit);
+			send_status=0;//停止发送
 		}
-		delay_ms(1000);
-		printf("test\r\n");
+		
 	}
 }
 /**

@@ -64,16 +64,42 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
   HAL_NVIC_EnableIRQ(DEBUG_USART_IRQ );		    //使能USART1中断通道  
 }
 
-
-#define CMD_MAX_LEN 50
-#define USER_CODE_LEN 10
-#define DATA_CODE_LEN 10
-char usart_cmd[CMD_MAX_LEN];
-
-
 /*
-<0xff00,0X11>
+
+//例子　
+
+    #include <stdio.h>
+　　#include <stdlib.h>
+　　void main()
+　　{
+　　    char* p = "0x1b";
+　　    char* str;
+　　    long i = strtol(p, &str, 16);
+　　    printf("%d\r\n", i);
+　　}
+
+
+//输出值为 27
+
 */
+
+long str_to_int(char* p)
+{
+	char* str;
+	long ret = strtol(p, &str, 16);
+	return ret;
+}
+
+
+char usart_cmd[CMD_MAX_LEN];
+char user_code[USER_CODE_LEN];
+char data_code[DATA_CODE_LEN];
+__IO int u_code,d_code;
+/*
+<00,11>
+*/
+
+int send_status=0;
 
 /*
 解析命令
@@ -81,24 +107,27 @@ char usart_cmd[CMD_MAX_LEN];
 void deal_cmd()
 {
 	
-	char *test="22,11>";
 	char user_code[USER_CODE_LEN];
 	char data_code[DATA_CODE_LEN];
-	
-	__IO uint8_t u_code,d_code;
-	
+		
 	memset(user_code,0,sizeof(char)*USER_CODE_LEN);
 	memset(data_code,0,sizeof(char)*DATA_CODE_LEN);
 	
-	memcpy(user_code,test,2*sizeof(char));
-	memcpy(data_code,test+3,2*sizeof(char));
+	memcpy(user_code,usart_cmd,2*sizeof(char));
+	memcpy(data_code,usart_cmd+3,2*sizeof(char));
+		
+	u_code=str_to_int(user_code);
+	d_code=str_to_int(data_code);
 	
-	u_code=atoi(user_code);
-	d_code=atoi(data_code);
+	printf("u_code->%d\r\n",u_code);
+	printf("d_code->%d\r\n",d_code);
 	
-	printf("%s\r\n",test);
-	printf("%s\r\n",user_code);
+	
+//	printf("user_code->%s\r\n",user_code);
+//	printf("data_code->%s\r\n",data_code);
+		
 	memset(usart_cmd,0,CMD_MAX_LEN*sizeof(char));
+	send_status=1;
 
 }
 

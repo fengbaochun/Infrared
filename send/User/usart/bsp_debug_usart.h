@@ -4,6 +4,11 @@
 #include "stm32f4xx.h"
 #include <stdio.h>
 
+#define CMD_MAX_LEN 50
+#define USER_CODE_LEN 3
+#define DATA_CODE_LEN 3
+
+
 //´®¿Ú²¨ÌØÂÊ
 #define DEBUG_USART_BAUDRATE                    115200
 
